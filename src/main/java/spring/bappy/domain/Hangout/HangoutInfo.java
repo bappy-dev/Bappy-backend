@@ -19,10 +19,10 @@ public class HangoutInfo {
     @Id
     private ObjectId hangoutInfoId;
 
-    @DateTimeFormat(iso = ISO.DATE_TIME)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
     private Date hangoutMeetTime;
 
-    @DateTimeFormat(iso = ISO.DATE_TIME)
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm")
     private Date hangoutRegTime;
 
     private String hangoutTitle;
@@ -56,6 +56,7 @@ public class HangoutInfo {
         hangoutLikeCount = 0;
         hangoutUserList = new ArrayList<String>();
         hangoutLikeList = new ArrayList<String>();
+        hangoutCategory = new ArrayList<String>();
     }
 
 
