@@ -7,8 +7,11 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import spring.bappy.controllers.response.PageInfo;
 import spring.bappy.domain.DTO.HangoutDto;
 import spring.bappy.domain.Hangout.HangoutInfo;
 import spring.bappy.domain.User.UserInfo;
@@ -21,8 +24,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -48,6 +50,40 @@ public class HangoutService {
         }
         return hangoutDtoList;
     }
+
+    public Map<String, Object> findHangoutByCategory(List<String> category, String hangoutSort ,int pageNum, String userId) {
+        if(category.get(0).equals("ALL")) {
+            category = Arrays.asList("Sports", "Travel", "Study", "Volunteer", "Food", "Drinks", "Cook", "Crafting", "Cultural activities", "Practice Language");
+        }
+        List<HangoutInfo> hangoutInfoList;
+        if(hangoutSort.equals("Newest")) {
+            hangoutInfoList = hangoutInfoRepository.findAllByHangoutCategoryContainsOrderByHangoutInfoIdDesc(category, PageRequest.of(pageNum * 10, 10));
+        }else if(hangoutSort.equals("Nearest")) {
+            hangoutInfoList = hangoutInfoRepository.findAllByHangoutCategoryContainsOrderByHangoutMeetTimeDesc(category, PageRequest.of(pageNum * 10, 10));
+
+        }else if (hangoutSort.equals("ManyViews")) {
+            hangoutInfoList = hangoutInfoRepository.findAllByHangoutCategoryContainsOrderByHangoutLikeCountDesc(category, PageRequest.of(pageNum * 10, 10));
+
+        }else if(hangoutSort.equals("ManyHearts")) {
+            hangoutInfoList = hangoutInfoRepository.findAllByHangoutCategoryContainsOrderByHangoutLikeCountDesc(category, PageRequest.of(pageNum * 10, 10));
+        }else { //LessSeats
+            hangoutInfoList = hangoutInfoRepository.findAllByHangoutCategoryContainsOrderByHangoutCurrentNumDesc(category, PageRequest.of(pageNum * 10, 10));
+        }
+
+        //List<HangoutInfo> hangoutInfoList = hangoutInfoRepository.findAllByHangoutCategoryContainsOrderByHangoutInfoIdDesc(category, PageRequest.of(pageNum * 10, 10));
+        List<HangoutDto> hangoutDtoList = new ArrayList<HangoutDto>();
+        for(HangoutInfo info : hangoutInfoList) {
+            hangoutDtoList.add(getHangoutDto(info,userId));
+        }
+        Map<String,Object> res = new HashMap<>();
+        PageInfo pageInfo = new PageInfo(hangoutInfoRepository.countAllByHangoutCategoryContains(category), hangoutDtoList.size());
+
+        res.put("pageInfo", pageInfo);
+        res.put("HangoutList", hangoutDtoList);
+        return res;
+
+    }
+
 
     public ArrayList<HangoutDto> getHangoutDtoListById(ArrayList<String> hangoutInfoId, String userId) {
         ArrayList<HangoutDto> hangoutDtoList = new ArrayList<HangoutDto>();
